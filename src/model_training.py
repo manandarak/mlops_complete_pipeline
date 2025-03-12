@@ -4,6 +4,7 @@ import pandas as pd
 import pickle
 import logging
 from sklearn.ensemble import RandomForestRegressor
+import yaml
  
 log_dir = 'logs'
 os.makedirs(log_dir,exist_ok=True)
@@ -24,6 +25,22 @@ file_handler.setFormatter(formatter)
 
 logger.addHandler(console_handler)
 logger.addHandler(file_handler)
+
+def load_params(params_path: str) -> dict:
+    try:
+        with open(params_path, 'r') as file:
+            params = yaml.safe_load(file)
+        logger.debug('Parameters retrieved from %s', params_path)
+        return params
+    except FileNotFoundError:
+        logger.error('File not found: %s', params_path)
+        raise
+    except yaml.YAMLError as e:
+        logger.error('YAML error: %s', e)
+        raise
+    except Exception as e:
+        logger.error('Unexpected error: %s', e)
+        raise
 
 def load_data(file_path : str) -> pd.DataFrame:
     try:
@@ -77,7 +94,7 @@ def save_model(model,file_path: str)-> str:
 
 def main():
     try:
-        params = {'n_estimators':100,'random_state':42}
+        params = load_params('params.yaml')['model_training']
         train_data = load_data('data/raw/train.csv')
         X_train = train_data.iloc[:,:-1].values
         y_train = train_data.iloc[:,-1].values

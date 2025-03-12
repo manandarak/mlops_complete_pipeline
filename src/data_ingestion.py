@@ -5,6 +5,7 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.preprocessing import LabelEncoder
 from sklearn.preprocessing import MinMaxScaler
 import os
+import yaml
 import logging
 
 #ensure the "logs" directory exits
@@ -28,6 +29,23 @@ file_handler.setFormatter(formatter)
 
 logger.addHandler(console_handler)
 logger.addHandler(file_handler)
+
+
+def load_params(params_path: str) -> dict:
+    try:
+        with open(params_path, 'r') as file:
+            params = yaml.safe_load(file)
+        logger.debug('Parameters retrieved from %s', params_path)
+        return params
+    except FileNotFoundError:
+        logger.error('File not found: %s', params_path)
+        raise
+    except yaml.YAMLError as e:
+        logger.error('YAML error: %s', e)
+        raise
+    except Exception as e:
+        logger.error('Unexpected error: %s', e)
+        raise
 
 
 def load_data(data_url : str ) -> pd.DataFrame :
@@ -102,7 +120,9 @@ def save_data(train_data:pd.DataFrame,test_data:pd.DataFrame,data_path:str) -> N
     
 def main():
     try:
-        test_size = 0.2
+        params = load_params(params_path='params.yaml')
+        test_size = params['data_ingestion']['test_size']
+        # test_size = 0.2
         data_path = 'https://raw.githubusercontent.com/manandarak/manandarak/refs/heads/main/Mumbai%20Property%20Data.csv'
         df = load_data(data_path)
         final_df = preprocess_data(df)

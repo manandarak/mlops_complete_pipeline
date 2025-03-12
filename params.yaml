@@ -1,0 +1,6 @@
+data_ingestion:
+  test_size : 0.20
+
+model_training:
+  n_estimators : 100
+  random_state : 42
