@@ -8,19 +8,26 @@ stages:
     outs:
     - data/raw
   model_training:
-   cmd : python src/model_training.py
-   deps : 
-   - data/raw
-   - src/model_training.py
-   params:
-   - model_training.n_estimators
-   - model_training.random_state
-   outs :
-   - models/model.pkl
+    cmd: python src/model_training.py
+    deps:
+    - data/raw
+    - src/model_training.py
+    params:
+    - model_training.n_estimators
+    - model_training.random_state
+    outs:
+    - models/model.pkl
   model_evaluation:
-   cmd : python src/model_evaluation.py
-   deps :
-   - models/model.pkl
-   - src/model_evaluation.py
-   metrics :
-   - reports/metrics.json
+    cmd: python src/model_evaluation.py
+    deps:
+    - models/model.pkl
+    - src/model_evaluation.py
+    metrics:
+    - reports/metrics.json
+params:
+- dvclive/params.yaml
+metrics:
+- dvclive/metrics.json
+plots:
+- dvclive/plots/metrics:
+    x: step

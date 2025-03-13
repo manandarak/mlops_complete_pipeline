@@ -28,6 +28,23 @@ file_handler.setFormatter(formatter)
 logger.addHandler(console_handler)
 logger.addHandler(file_handler)
 
+def load_params(params_path: str) -> dict:
+    try:
+        with open(params_path, 'r') as file:
+            params = yaml.safe_load(file)
+        logger.debug('Parameters retrieved from %s', params_path)
+        return params
+    except FileNotFoundError:
+        logger.error('File not found: %s', params_path)
+        raise
+    except yaml.YAMLError as e:
+        logger.error('YAML error: %s', e)
+        raise
+    except Exception as e:
+        logger.error('Unexpected error: %s', e)
+        raise
+
+
 def load_model(file_path: str):
     try:
         with open(file_path, 'rb') as file:
@@ -85,14 +102,22 @@ def save_metrics(metrics: dict, file_path: str) -> None:
 
 def main():
     try:
+        params = load_params(params_path='params.yaml')
         rf_reg_model = load_model('models/model.pkl')
-        
         test_data = load_data('data/raw/test.csv')
         
         X_test = test_data.iloc[:, :-1].values
         y_test = test_data.iloc[:, -1].values
         
         metrics = evaluate_model(rf_reg_model, X_test, y_test)
+        
+        # Experiment tracking using dvclive
+        with Live(save_dvc_exp=True) as live:
+            live.log_metric('Mean Squared Error', mean_squared_error(y_test, y_test))
+            live.log_metric('Mean Absolute Error', mean_absolute_error(y_test, y_test))
+            live.log_metric('r2_score', r2_score(y_test, y_test))
+
+            live.log_params(params)
         
         save_metrics(metrics, 'reports/metrics.json')
     except Exception as e:
